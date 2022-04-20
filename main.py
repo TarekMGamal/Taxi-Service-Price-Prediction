@@ -1,6 +1,4 @@
-def helloworld():
-    print('Hello World')
-
+import preprocessing as pre
 
 if __name__ == '__main__':
-    helloworld()
+    pre.pre_process()
