@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def combine_data_sets():
@@ -41,12 +43,29 @@ def feature_encoder(x, cols):
     return x
 
 
+def feature_selection(data):
+    y = data['price']
+
+    corr = data.corr()
+    top_feature = corr.index[abs(corr['price']) > 0.00]
+
+    plt.subplots(figsize=(12, 8))
+    top_corr = data[top_feature].corr()
+    sns.heatmap(top_corr, annot=True)
+    plt.show()
+
+    top_feature = top_feature.delete(-1)
+    x = data[top_feature]
+
+    return x, y
+
+
 def pre_process():
     # combine several data sets into one
     data = combine_data_sets()
 
     # label encoding
-    cols = ['cab_type', 'time_stamp', 'destination', 'source', 'id', 'product_id', 'name']
+    cols = ['cab_type', 'time_stamp', 'destination', 'source', 'name', 'id', 'product_id']
     data = feature_encoder(data, cols)
 
     # remove rows with missing y
@@ -55,8 +74,9 @@ def pre_process():
     # remove columns with many NULL values
     data.dropna(axis=1, thresh=250000, inplace=True)
 
-    # extract x & y from data
-    x = data.drop(['price'], axis=1)
-    y = data['price']
+    # remove columns that intuitively don't affect the output
+    data.drop(['id', 'product_id'], axis=1, inplace=True)
+
+    x, y = feature_selection(data)
 
     return x, y

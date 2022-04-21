@@ -11,7 +11,7 @@ def polynomial_regression(x, y):
 
     # X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size = 0.50,shuffle=True)
 
-    poly_features = PolynomialFeatures(degree=2)
+    poly_features = PolynomialFeatures(degree=1)
 
     # transforms the existing features to higher degree features.
     x_train_poly = poly_features.fit_transform(x_train)
@@ -29,8 +29,8 @@ def polynomial_regression(x, y):
     # predicting on test data-set
     prediction = poly_model.predict(poly_features.fit_transform(x_test))
 
-    print('Co-efficient regression', poly_model.coef_)
-    print('Intercept of regression model', poly_model.intercept_)
+    print('Co-efficient of linear regression', poly_model.coef_)
+    print('Intercept of linear regression model', poly_model.intercept_)
     print('Mean Square Error', metrics.mean_squared_error(y_test, prediction))
 
     true_value = np.asarray(y_test)[:10]
