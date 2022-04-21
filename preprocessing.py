@@ -1,15 +1,12 @@
 import pandas as pd
 from datetime import datetime
+from sklearn.preprocessing import LabelEncoder
 
 
 def combine_data_sets():
     # read data sets
     data1 = pd.read_csv('data sets/taxi-rides.csv')
     data2 = pd.read_csv('data sets/weather.csv')
-
-    # extract y from data1
-    y = data1['price']
-    data1.drop(["price"], axis=1, inplace=True)
 
     # convert from 1e12 to 1e9
     data1['time_stamp'] = data1['time_stamp'].apply(lambda t: int(t / 1000))
@@ -32,13 +29,34 @@ def combine_data_sets():
                     right_on=['location', 'time_stamp'])
 
     # remove unnecessary columns
-    data.drop(['index_x', 'index_y', 'index', 'location_x', 'location_y'], axis=1, inplace=True)
+    data.drop(['location_x', 'location_y'], axis=1, inplace=True)
 
-    x = data
-    return x, y
+    return data
+
+
+def feature_encoder(x, cols):
+    for c in cols:
+        lbl = LabelEncoder()
+        x[c] = lbl.fit_transform(list(x[c].values))
+    return x
 
 
 def pre_process():
-    x, y = combine_data_sets()
+    # combine several data sets into one
+    data = combine_data_sets()
+
+    # label encoding
+    cols = ['cab_type', 'time_stamp', 'destination', 'source', 'id', 'product_id', 'name']
+    data = feature_encoder(data, cols)
+
+    # remove rows with missing y
+    data.dropna(axis=0, subset=['price'], inplace=True)
+
+    # remove columns with many NULL values
+    data.dropna(axis=1, thresh=250000, inplace=True)
+
+    # extract x & y from data
+    x = data.drop(['price'], axis=1)
+    y = data['price']
 
     return x, y
