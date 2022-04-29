@@ -1,15 +1,12 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-def combine_data_sets():
-    # read data sets
-    data1 = pd.read_csv('data sets/taxi-rides.csv')
-    data2 = pd.read_csv('data sets/weather.csv')
-
+def combine_data_sets(data1, data2):
     # convert from 1e12 to 1e9
     data1['time_stamp'] = data1['time_stamp'].apply(lambda t: int(t / 1000))
 
@@ -46,8 +43,9 @@ def feature_encoder(x, cols):
 def feature_selection(data):
     y = data['price']
 
+    corr_threshold = 0.0
     corr = data.corr()
-    top_feature = corr.index[abs(corr['price']) > 0.2]
+    top_feature = corr.index[abs(corr['price']) > corr_threshold]
 
     plt.subplots(figsize=(12, 8))
     top_corr = data[top_feature].corr()
@@ -55,18 +53,28 @@ def feature_selection(data):
     plt.show()
 
     x = data[top_feature]
-    # x.drop(['price', 'id', 'product_id', 'time_stamp', 'source', 'destination', 'cab_type'], inplace=True, axis=1)
-    x.drop('price', axis=1, inplace=True)
+    x.drop(['price', 'id', 'product_id'], inplace=True, axis=1)
 
     return x, y
 
 
-def pre_process():
-    # combine several data sets into one
-    data = combine_data_sets()
+def feature_scaling(x, a, b):
+    x = np.array(x)
+    normalized_x = np.zeros((x.shape[0], x.shape[1]))
+    for i in range(x.shape[1]):
+        normalized_x[:, i] = ((x[:, i]-min(x[:, i]))/(max(x[:, i])-min(x[:, i])))*(b-a)+a
+    return normalized_x
 
-    data = pd.get_dummies(data, columns=['name'])
-    cols = ['cab_type', 'time_stamp', 'destination', 'source', 'id', 'product_id']
+
+def pre_process(data1, data2):
+    # combine several data sets into one
+    data = combine_data_sets(data1, data2)
+
+    # one hot encoding to increasing number of features
+    data = pd.get_dummies(data, columns=['name', 'cab_type', 'destination', 'source'])
+
+    # mapping string values to numbers
+    cols = ['time_stamp', 'id', 'product_id']
     data = feature_encoder(data, cols)
 
     # remove rows with missing y
@@ -76,5 +84,8 @@ def pre_process():
     data.dropna(axis=1, thresh=250000, inplace=True)
 
     x, y = feature_selection(data)
+
+    # min max scaling
+    x = feature_scaling(x, 0, 1)
 
     return x, y

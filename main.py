@@ -1,9 +1,15 @@
+import pandas as pd
 import preprocessing as pre
-import model1
-import model2
+import regression_model
 
 if __name__ == '__main__':
-    x, y = pre.pre_process()
-    model1.polynomial_regression(x, y)
-    model2.polynomial_regression(x, y)
+    url1 = 'data sets/taxi-rides.csv'
+    url2 = 'data sets/weather.csv'
 
+    data1 = pd.read_csv(url1)
+    data2 = pd.read_csv(url2)
+
+    x, y = pre.pre_process(data1, data2)
+
+    degree = 2
+    regression_model.regression(x, y, degree)
